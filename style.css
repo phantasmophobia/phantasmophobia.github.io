@@ -8,7 +8,7 @@
 html, body {
   width: 100%;
   height: 100%;
-  font-family: 'Georgia', serif;
+  font-family: "Special Elite", system-ui;
   background: #d9c4a0;
 }
 
@@ -24,8 +24,8 @@ body {
   margin: auto;
   display: flex;
   flex-direction: column;
-  background: #e6d3b5;
-  border: 6px solid #3b2f1d;
+  background: linear-gradient(90deg, #D9C3A9, #FFEFDC);
+  border: 7.4px solid #3b2f1d;
   border-radius: 20px;
   padding: 10px;
 }
@@ -35,7 +35,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f1ddbd;
+  background: linear-gradient(90deg, #FFEFDC, #D9C3A9);
   padding: 10px 20px;
   border: 4px solid #3b2f1d;
   border-radius: 15px;
@@ -45,10 +45,11 @@ body {
 }
 
 .title {
-  font-family: 'Georgia', serif;
+  font-family: "Special Elite", system-ui;
 }
 
 .close-button {
+  font-family: "Special Elite", system-ui;
   background: linear-gradient(#f44, #a00);
   border: none;
   color: white;
@@ -70,12 +71,12 @@ body {
 
 .main-content {
   flex: 3;
-  background: #e2cdb1;
+  background: linear-gradient(90deg, #FFEFDC, #D9C3A9);
 }
 
 .sidebar {
   flex: 1;
-  background: #e2cdb1;
+  background: linear-gradient(90deg, #FFEFDC, #D9C3A9);
   display: flex;
   align-items: center;
   justify-content: center;

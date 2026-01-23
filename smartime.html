@@ -6,216 +6,189 @@
     <title>SMARTIME | Pro</title>
     <style>
         :root {
-            --bg: #f4f4f4;
-            --text: #000;
-            --card-bg: #fff;
-            --border: #000;
-            --accent: #888;
+            --bg: #f4f4f4; --text: #000; --card-bg: #fff; --border: #000; --accent: #888;
         }
-
         [data-theme="dark"] {
-            --bg: #1a1a1a;
-            --text: #f4f4f4;
-            --card-bg: #2d2d2d;
-            --border: #f4f4f4;
-            --accent: #444;
+            --bg: #1a1a1a; --text: #f4f4f4; --card-bg: #2d2d2d; --border: #f4f4f4; --accent: #444;
         }
 
         body { 
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; 
-            margin: 0; background: var(--bg); color: var(--text);
-            transition: background 0.3s, color 0.3s;
-            display: flex; flex-direction: column; min-height: 100vh;
+            font-family: 'Comic Sans MS', sans-serif; margin: 0; background: var(--bg); color: var(--text);
+            transition: background 0.3s; display: flex; flex-direction: column; min-height: 100vh;
         }
         
+        /* Header & Nav */
         header { 
-            background: var(--border); color: var(--bg); 
-            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            background: var(--border); color: var(--bg); padding: 1rem 2rem; 
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .theme-toggle {
-            cursor: pointer; background: var(--bg); color: var(--text);
-            border: 2px solid var(--text); padding: 5px 10px; font-weight: bold;
-        }
+        nav span { cursor: pointer; margin: 0 10px; text-decoration: underline; }
 
         main { flex: 1; padding: 2rem; }
-        .timer-container { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 2rem; }
+        .timer-container { display: flex; gap: 20px; flex-wrap: wrap; }
 
         /* Timer Card */
         .timer-card { 
             background: var(--card-bg); border: 3px solid var(--border); border-radius: 15px; 
             padding: 20px; width: 260px; box-shadow: 6px 6px 0px var(--border);
-            position: relative;
         }
-
         .time-display { font-size: 3rem; margin: 10px 0; font-weight: bold; }
-        
-        .btn { 
-            cursor: pointer; border: 2px solid var(--border); padding: 8px 12px; 
-            font-weight: bold; font-family: inherit; margin: 5px 2px;
-        }
-        .btn-switch { background: #ff7675; width: 100%; display: none; color: white; }
-        .btn-delete { background: transparent; color: var(--text); font-size: 0.7rem; opacity: 0.6; }
 
-        /* Create Button */
+        /* Pop-up Modals */
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--card-bg); border: 4px solid var(--border); padding: 30px;
+            width: 350px; box-shadow: 15px 15px 0px var(--border); color: var(--text);
+        }
+
+        /* Buttons */
+        .btn { cursor: pointer; border: 2px solid var(--border); padding: 10px; font-weight: bold; font-family: inherit; margin-top: 10px; width: 100%; }
         .create-btn { 
             background: var(--accent); color: white; border: 3px solid var(--border); 
-            border-radius: 15px; width: 180px; height: 180px; display: flex; 
+            border-radius: 15px; width: 150px; height: 150px; display: flex; 
             flex-direction: column; align-items: center; justify-content: center; cursor: pointer; 
         }
 
-        /* Modal */
-        #modal { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: var(--card-bg); border: 4px solid var(--border); padding: 25px; 
-            z-index: 100; box-shadow: 12px 12px 0px var(--border); width: 300px;
-        }
-        input, select { width: 100%; margin: 8px 0; padding: 8px; border: 2px solid var(--border); box-sizing: border-box; }
-
-        /* History */
-        #history-section { border-top: 3px solid var(--border); background: var(--accent); padding: 20px; color: white; }
-        .history-item { background: rgba(0,0,0,0.2); margin: 5px 0; padding: 8px; border-radius: 5px; font-size: 0.85rem; }
-
-        footer { background: var(--border); color: var(--bg); padding: 1.5rem; text-align: center; }
+        /* Stats Bar */
+        #stats-bar { background: var(--border); color: var(--bg); padding: 10px 20px; display: flex; gap: 20px; font-size: 0.9rem; }
     </style>
 </head>
 <body data-theme="light">
 
     <header>
-        <div><strong>SMARTIME</strong> | timers | about</div>
-        <button class="theme-toggle" onclick="toggleTheme()">TOGGLE THEME</button>
+        <div><strong>SMARTIME</strong></div>
+        <nav>
+            <span onclick="location.reload()">timers</span> | 
+            <span onclick="showModal('about-modal')">about</span> | 
+            <span onclick="showModal('login-modal')">sign-in</span>
+        </nav>
+        <button onclick="toggleTheme()" style="cursor:pointer">🌓</button>
     </header>
+
+    <div id="stats-bar">
+        <span>Today's Progress:</span>
+        <span>Study: <b id="stat-study">0</b>m</span>
+        <span>Rest: <b id="stat-ent">0</b>m</span>
+    </div>
 
     <main>
         <h1>TIMERS</h1>
         <div class="timer-container" id="timer-list">
-            <div class="create-btn" onclick="openModal()">
-                <div style="font-size: 4rem;">+</div>
+            <div class="create-btn" onclick="showModal('create-modal')">
+                <div style="font-size: 3rem;">+</div>
                 <div>create new</div>
             </div>
         </div>
     </main>
 
-    <div id="history-section">
-        <h3>SESSION LOG</h3>
-        <div id="history-list"><em>No data recorded yet...</em></div>
+    <div id="about-modal" class="overlay" onclick="closeModals(event)">
+        <div class="modal-content">
+            <h2>About SMARTIME</h2>
+            <p>https://discord.gg/AC67297ZeS</p>
+            <p>Created to help you balance deep study with deserved breaks.</p>
+            <button class="btn" onclick="hideModal('about-modal')">Close</button>
+        </div>
     </div>
 
-    <div id="modal">
-        <h3 style="margin-top:0">Settings</h3>
-        <label>Task Name</label>
-        <input type="text" id="taskName" placeholder="e.g. Coding">
-        
-        <label>Study Mins</label>
-        <input type="number" id="studyMin" value="25">
-        
-        <label>Entertainment Mins</label>
-        <input type="number" id="entMin" value="5">
-        
-        <label>Start With:</label>
-        <select id="startMode">
-            <option value="study">Study</option>
-            <option value="entertainment">Entertainment</option>
-        </select>
-        
-        <br><br>
-        <button class="btn" style="background:var(--border); color:var(--bg)" onclick="addTimer()">ADD TIMER</button>
-        <button class="btn" onclick="closeModal()">CANCEL</button>
+    <div id="login-modal" class="overlay" onclick="closeModals(event)">
+        <div class="modal-content">
+            <h2>Sign In</h2>
+            <input type="text" placeholder="Username" style="width:90%; padding:10px; margin-bottom:10px;">
+            <input type="password" placeholder="Password" style="width:90%; padding:10px;">
+            <button class="btn" onclick="alert('Demo Mode: No account needed!')">Login</button>
+            <button class="btn" onclick="hideModal('login-modal')">Close</button>
+        </div>
     </div>
 
-    <audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
+    <div id="create-modal" class="overlay" onclick="closeModals(event)">
+        <div class="modal-content">
+            <h3>New Timer</h3>
+            <label>Name:</label><br><input type="text" id="taskName" value="Biology" style="width:95%"><br><br>
+            <label>Study (mins):</label><br><input type="number" id="studyMin" value="25" style="width:95%"><br><br>
+            <label>Break (mins):</label><br><input type="number" id="entMin" value="5" style="width:95%"><br><br>
+            <label>Start with:</label>
+            <select id="startMode" style="width:100%; padding:5px;">
+                <option value="study">Study</option>
+                <option value="entertainment">Entertainment</option>
+            </select>
+            <button class="btn" style="background:black; color:white" onclick="addTimer()">CREATE</button>
+        </div>
+    </div>
 
-    <footer>SMARTIME Concept</footer>
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
 
     <script>
-        const timerList = document.getElementById('timer-list');
-        const historyList = document.getElementById('history-list');
-        const alarm = document.getElementById('alarm-sound');
+        let totalStudy = 0;
+        let totalEnt = 0;
 
-        // Theme Toggle Logic
         function toggleTheme() {
-            const body = document.body;
-            const current = body.getAttribute('data-theme');
-            body.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+            document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
         }
 
-        function openModal() { document.getElementById('modal').style.display = 'block'; }
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-        function addHistory(task, mode) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if(historyList.innerHTML.includes('<em>')) historyList.innerHTML = '';
-            const item = `<div class="history-item"><strong>[${time}]</strong> Finished ${mode} session for <strong>${task}</strong></div>`;
-            historyList.insertAdjacentHTML('afterbegin', item);
-        }
+        function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function closeModals(e) { if(e.target.className === 'overlay') e.target.style.display = 'none'; }
 
         function addTimer() {
-            const config = {
-                name: document.getElementById('taskName').value || "Task",
-                study: parseInt(document.getElementById('studyMin').value) || 25,
-                ent: parseInt(document.getElementById('entMin').value) || 5,
-                mode: document.getElementById('startMode').value
-            };
-            createTimerCard(config);
-            closeModal();
+            const name = document.getElementById('taskName').value;
+            const s = parseInt(document.getElementById('studyMin').value);
+            const e = parseInt(document.getElementById('entMin').value);
+            const mode = document.getElementById('startMode').value;
+            
+            createTimerCard(name, s, e, mode);
+            hideModal('create-modal');
         }
 
-        function createTimerCard(cfg) {
+        function createTimerCard(name, studyM, entM, startMode) {
             const card = document.createElement('div');
             card.className = 'timer-card';
-            
-            let isStudy = (cfg.mode === 'study');
-            let mins = isStudy ? cfg.study : cfg.ent;
+            let isStudy = (startMode === 'study');
+            let mins = isStudy ? studyM : entM;
             let secs = 0;
             let isPaused = false;
 
             card.innerHTML = `
-                <h3 style="margin:0">${cfg.name}</h3>
-                <div class="state-label" style="font-weight:bold; margin-top:5px;">${isStudy ? 'STUDY' : 'BREAK'}</div>
+                <h3 style="margin:0">${name}</h3>
+                <div class="mode-label" style="font-weight:bold; color:red">${isStudy ? 'STUDY' : 'BREAK'}</div>
                 <div class="time-display">${mins}:00</div>
-                <button class="btn btn-switch">START NEXT PHASE</button>
-                <button class="btn btn-delete">Remove</button>
+                <button class="btn switch-btn" style="display:none; background:orange">START NEXT</button>
+                <button class="btn" onclick="this.parentElement.remove()" style="font-size:10px; border:none; background:none; text-decoration:underline">remove</button>
             `;
 
             const display = card.querySelector('.time-display');
-            const stateLabel = card.querySelector('.state-label');
-            const switchBtn = card.querySelector('.btn-switch');
+            const modeLabel = card.querySelector('.mode-label');
+            const sBtn = card.querySelector('.switch-btn');
 
-            const interval = setInterval(() => {
-                if (isPaused) return;
-
-                if (secs === 0) {
-                    if (mins === 0) {
+            const ticker = setInterval(() => {
+                if(isPaused) return;
+                if(secs === 0) {
+                    if(mins === 0) {
                         isPaused = true;
-                        alarm.play().catch(() => {}); 
-                        switchBtn.style.display = "block";
-                        addHistory(cfg.name, isStudy ? 'Study' : 'Entertainment');
+                        document.getElementById('alarm-sound').play();
+                        sBtn.style.display = 'block';
+                        // Update Stats
+                        if(isStudy) { totalStudy += studyM; document.getElementById('stat-study').innerText = totalStudy; }
+                        else { totalEnt += entM; document.getElementById('stat-ent').innerText = totalEnt; }
                         return;
                     }
                     mins--; secs = 59;
-                } else {
-                    secs--;
-                }
+                } else { secs--; }
                 display.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }, 1000);
 
-            switchBtn.addEventListener('click', () => {
-                alarm.pause(); alarm.currentTime = 0;
+            sBtn.onclick = () => {
+                isPaused = false; sBtn.style.display = 'none';
                 isStudy = !isStudy;
-                mins = isStudy ? cfg.study : cfg.ent;
-                secs = 0;
-                isPaused = false;
-                switchBtn.style.display = "none";
-                stateLabel.innerText = isStudy ? 'STUDY' : 'BREAK';
-                display.innerText = `${mins}:00`;
-            });
+                mins = isStudy ? studyM : entM; secs = 0;
+                modeLabel.innerText = isStudy ? 'STUDY' : 'BREAK';
+                modeLabel.style.color = isStudy ? 'red' : 'blue';
+            };
 
-            card.querySelector('.btn-delete').addEventListener('click', () => {
-                clearInterval(interval);
-                card.remove();
-            });
-
-            timerList.insertBefore(card, timerList.lastElementChild);
+            document.getElementById('timer-list').insertBefore(card, document.getElementById('timer-list').lastElementChild);
         }
     </script>
 </body>

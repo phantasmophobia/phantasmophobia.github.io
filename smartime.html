@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMARTIME | Timers</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --card-bg: #ffffff;
+            --accent-gray: #333;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Keeps the "sketch" feel */
+            margin: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #000;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        main { flex: 1; padding: 2rem; }
+        h1 { font-size: 3rem; margin-bottom: 2rem; }
+
+        .timer-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* The Timer Card */
+        .timer-card {
+            background: var(--card-bg);
+            border: 3px solid #000;
+            border-radius: 15px;
+            padding: 20px;
+            width: 260px;
+            box-shadow: 6px 6px 0px #000;
+            position: relative;
+        }
+
+        .state-tag {
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #d63031;
+        }
+
+        .active-status {
+            color: #27ae60;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        /* Create Button */
+        .create-btn {
+            background: #888;
+            color: white;
+            border: 3px solid #000;
+            border-radius: 15px;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .create-btn:hover { background: #666; }
+
+        /* Modal / Form */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 4px solid #000;
+            padding: 20px;
+            z-index: 100;
+            box-shadow: 10px 10px 0px #000;
+        }
+
+        input { margin: 10px 0; padding: 8px; width: 90%; border: 2px solid black; }
+        button.save-btn { background: black; color: white; padding: 10px 20px; cursor: pointer; border: none; }
+
+        footer { background: #000; color: white; padding: 2rem; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div><strong>SMARTIME</strong></div>
+        <nav>timers | about | sign-in</nav>
+    </header>
+
+    <main>
+        <h1>TIMERS</h1>
+        <div class="timer-container" id="timer-list">
+            <div class="create-btn" onclick="openModal()">
+                <div style="font-size: 4rem;">+</div>
+                <div>create new</div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal">
+        <h3>Create New Timer</h3>
+        <input type="text" id="taskName" placeholder="Task Name (e.g. Math)">
+        <input type="number" id="studyMin" placeholder="Study Minutes">
+        <input type="number" id="entMin" placeholder="Entertainment Minutes">
+        <br>
+        <button class="save-btn" onclick="addTimer()">ADD TIMER</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+
+    <footer>footer</footer>
+
+    <script>
+        const timerList = document.getElementById('timer-list');
+        const modal = document.getElementById('modal');
+
+        function openModal() { modal.style.display = 'block'; }
+        function closeModal() { modal.style.display = 'none'; }
+
+        function addTimer() {
+            const name = document.getElementById('taskName').value || "New Task";
+            const sTime = parseInt(document.getElementById('studyMin').value) || 25;
+            const eTime = parseInt(document.getElementById('entMin').value) || 5;
+
+            createTimerCard(name, sTime, eTime);
+            closeModal();
+        }
+
+        function createTimerCard(name, studyMins, entMins) {
+            const card = document.createElement('div');
+            card.className = 'timer-card';
+            
+            // Internal logic variables
+            let isStudy = true;
+            let currentMinutes = studyMins;
+            let currentSeconds = 0;
+
+            card.innerHTML = `
+                <h3 style="margin-top:0">${name}</h3>
+                <p>Study: ${studyMins}m | Ent: ${entMins}m</p>
+                <hr>
+                <p>Current State: <span class="state-label" style="font-weight:bold">STUDY</span></p>
+                <h2 class="time-display">${studyMins}:00</h2>
+                <div class="active-status">● currently active</div>
+                <button onclick="this.parentElement.remove()" style="margin-top:10px; cursor:pointer">Delete</button>
+            `;
+
+            const timeDisplay = card.querySelector('.time-display');
+            const stateLabel = card.querySelector('.state-label');
+
+            // The Timer Engine
+            const interval = setInterval(() => {
+                if (currentSeconds === 0) {
+                    if (currentMinutes === 0) {
+                        // Switch Logic
+                        isStudy = !isStudy;
+                        currentMinutes = isStudy ? studyMins : entMins;
+                        stateLabel.innerText = isStudy ? "STUDY" : "ENTERTAINMENT";
+                        stateLabel.style.color = isStudy ? "black" : "blue";
+                        alert(`${name}: Time for ${isStudy ? 'Study' : 'Entertainment'}!`);
+                    } else {
+                        currentMinutes--;
+                        currentSeconds = 59;
+                    }
+                } else {
+                    currentSeconds--;
+                }
+
+                // Formatting: adds a leading zero if seconds < 10
+                timeDisplay.innerText = `${currentMinutes}:${currentSeconds < 10 ? '0' : ''}${currentSeconds}`;
+            }, 1000);
+
+            // Clean up interval if card is deleted
+            card.querySelector('button').addEventListener('click', () => clearInterval(interval));
+
+            timerList.insertBefore(card, timerList.lastElementChild);
+        }
+    </script>
+</body>
+</html>

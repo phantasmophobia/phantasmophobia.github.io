@@ -2,93 +2,211 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dynamic 3-Tone Filter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tri-Tone Image Filter</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background: #eef2f3; padding: 20px; color: #333; }
-        .controls { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; }
-        .slider-group { margin: 20px 0; display: flex; flex-direction: column; gap: 10px; }
-        label { font-weight: bold; font-size: 0.9rem; }
-        canvas { max-width: 100%; border-radius: 8px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); background: white; }
-        input[type="range"] { width: 100%; cursor: pointer; }
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --accent-red: #ff3333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        canvas, img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* The Color Ramp Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            outline: none;
+            /* Gradient: Black -> Red -> White */
+            background: linear-gradient(to right, #000 0%, #ff0000 50%, #fff 100%);
+            border: 1px solid #444;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .upload-btn {
+            background-color: #444;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-btn:hover { background-color: #555; }
     </style>
 </head>
 <body>
 
-    <div class="controls">
-        <h2>Adjustable 3-Tone Filter</h2>
-        <input type="file" id="upload" accept="image/*" style="margin-bottom: 20px;">
-        
-        <div class="slider-group">
-            <label id="label1">Black/Red Threshold: 85</label>
-            <input type="range" id="thresh1" min="0" max="255" value="85">
-            
-            <label id="label2">Red/White Threshold: 170</label>
-            <input type="range" id="thresh2" min="0" max="255" value="170">
-        </div>
-        <p><small>Black ➔ Threshold 1 ➔ Red ➔ Threshold 2 ➔ White</small></p>
-    </div>
+    <h1>Tri-Tone Threshold Filter</h1>
 
-    <canvas id="canvas"></canvas>
+    <div class="container">
+        <input type="file" id="upload" accept="image/*" class="upload-btn">
+        
+        <div class="canvas-container">
+            <div>
+                <p>Original</p>
+                <img id="sourceImage" style="display:none;">
+                <canvas id="inputCanvas"></canvas>
+            </div>
+            <div>
+                <p>Filtered</p>
+                <canvas id="outputCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="label-row">
+                    <label>Threshold 1 (Black to Red)</label>
+                    <span id="val1">33%</span>
+                </div>
+                <input type="range" id="thresh1" min="0" max="100" value="33">
+            </div>
+
+            <div class="control-group">
+                <div class="label-row">
+                    <label>Threshold 2 (Red to White)</label>
+                    <span id="val2">66%</span>
+                </div>
+                <input type="range" id="thresh2" min="0" max="100" value="66">
+            </div>
+        </div>
+    </div>
 
     <script>
         const upload = document.getElementById('upload');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        const t1 = document.getElementById('thresh1');
-        const t2 = document.getElementById('thresh2');
-        const l1 = document.getElementById('label1');
-        const l2 = document.getElementById('label2');
-
-        let originalImage = null;
+        const thresh1 = document.getElementById('thresh1');
+        const thresh2 = document.getElementById('thresh2');
+        const val1Text = document.getElementById('val1');
+        const val2Text = document.getElementById('val2');
+        
+        const inCanvas = document.getElementById('inputCanvas');
+        const outCanvas = document.getElementById('outputCanvas');
+        const inCtx = inCanvas.getContext('2d');
+        const outCtx = outCanvas.getContext('2d');
+        
+        let img = new Image();
 
         upload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
             reader.onload = (event) => {
-                originalImage = new Image();
-                originalImage.onload = processImage;
-                originalImage.src = event.target.result;
+                img.onload = () => {
+                    // Set canvas sizes
+                    inCanvas.width = outCanvas.width = img.width;
+                    inCanvas.height = outCanvas.height = img.height;
+                    inCtx.drawImage(img, 0, 0);
+                    applyFilter();
+                };
+                img.src = event.target.result;
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(e.target.files[0]);
         });
 
-        function processImage() {
-            if (!originalImage) return;
+        function applyFilter() {
+            if (!img.src) return;
 
-            // Maintain boundaries (Threshold 1 cannot exceed Threshold 2)
-            if (parseInt(t1.value) > parseInt(t2.value)) {
-                t1.value = t2.value;
-            }
-            
-            l1.innerText = `Black/Red Threshold: ${t1.value}`;
-            l2.innerText = `Red/White Threshold: ${t2.value}`;
+            const t1 = thresh1.value / 100 * 255;
+            const t2 = thresh2.value / 100 * 255;
 
-            canvas.width = originalImage.width;
-            canvas.height = originalImage.height;
-            ctx.drawImage(originalImage, 0, 0);
-            
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            val1Text.innerText = thresh1.value + "%";
+            val2Text.innerText = thresh2.value + "%";
+
+            const imageData = inCtx.getImageData(0, 0, inCanvas.width, inCanvas.height);
             const data = imageData.data;
-            const val1 = parseInt(t1.value);
-            const val2 = parseInt(t2.value);
 
             for (let i = 0; i < data.length; i += 4) {
-                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                // 1. Convert to Grayscale (Luminance)
+                const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
 
-                if (avg < val1) {
-                    data[i] = 0; data[i+1] = 0; data[i+2] = 0;         // Black
-                } else if (avg < val2) {
-                    data[i] = 255; data[i+1] = 0; data[i+2] = 0;       // Red
+                // 2. Apply Tri-Tone Logic
+                if (avg < t1) {
+                    // Black
+                    data[i] = 0;     // R
+                    data[i + 1] = 0; // G
+                    data[i + 2] = 0; // B
+                } else if (avg < t2) {
+                    // Red
+                    data[i] = 255;   // R
+                    data[i + 1] = 0; // G
+                    data[i + 2] = 0; // B
                 } else {
-                    data[i] = 255; data[i+1] = 255; data[i+2] = 255;   // White
+                    // White
+                    data[i] = 255;   // R
+                    data[i + 1] = 255; // G
+                    data[i + 2] = 255; // B
                 }
             }
-            ctx.putImageData(imageData, 0, 0);
+
+            outCtx.putImageData(imageData, 0, 0);
         }
 
-        t1.addEventListener('input', processImage);
-        t2.addEventListener('input', processImage);
+        // Listen for slider changes
+        thresh1.addEventListener('input', applyFilter);
+        thresh2.addEventListener('input', applyFilter);
     </script>
 </body>
 </html>

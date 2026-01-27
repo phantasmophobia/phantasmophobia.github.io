@@ -3,210 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tri-Tone Image Filter</title>
+    <title>Dual-Handle Color Ramp Filter</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text-color: #e0e0e0;
-            --accent-red: #ff3333;
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --text: #ffffff;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 40px;
         }
 
         .container {
-            background-color: var(--card-bg);
-            padding: 2rem;
+            background: var(--panel);
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 800px;
             width: 100%;
+            max-width: 600px;
         }
 
-        .canvas-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        canvas, img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
+        canvas {
+            width: 100%;
+            border-radius: 8px;
             background: #000;
+            margin-bottom: 20px;
         }
 
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        /* The Color Ramp Sliders */
-        input[type=range] {
-            -webkit-appearance: none;
+        /* Multi-Slider Styling */
+        .ramp-wrapper {
+            position: relative;
+            height: 50px;
             width: 100%;
-            height: 12px;
-            border-radius: 6px;
-            outline: none;
-            /* Gradient: Black -> Red -> White */
-            background: linear-gradient(to right, #000 0%, #ff0000 50%, #fff 100%);
-            border: 1px solid #444;
+            margin: 30px 0;
         }
 
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
+        .ramp-background {
+            position: absolute;
+            top: 10px;
+            width: 100%;
             height: 20px;
-            background: #fff;
-            border: 2px solid #333;
+            border-radius: 10px;
+            border: 1px solid #444;
+            /* Gradient updated by JS */
+            background: linear-gradient(to right, black 33%, red 33%, red 66%, white 66%);
+        }
+
+        .slider {
+            position: absolute;
+            pointer-events: none;
+            -webkit-appearance: none;
+            z-index: 2;
+            height: 20px;
+            width: 100%;
+            top: 10px;
+            background: none;
+            outline: none;
+            margin: 0;
+        }
+
+        /* Styling the handles */
+        .slider::-webkit-slider-thumb {
+            pointer-events: all;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
+            background: #fff;
+            border: 3px solid #121212;
             cursor: pointer;
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        .label-row {
+        .upload-area {
+            margin-bottom: 20px;
+            border: 2px dashed #444;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .stats {
             display: flex;
             justify-content: space-between;
+            font-size: 0.8rem;
+            color: #aaa;
         }
-
-        .upload-btn {
-            background-color: #444;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .upload-btn:hover { background-color: #555; }
     </style>
 </head>
 <body>
 
-    <h1>Tri-Tone Threshold Filter</h1>
-
     <div class="container">
-        <input type="file" id="upload" accept="image/*" class="upload-btn">
-        
-        <div class="canvas-container">
-            <div>
-                <p>Original</p>
-                <img id="sourceImage" style="display:none;">
-                <canvas id="inputCanvas"></canvas>
-            </div>
-            <div>
-                <p>Filtered</p>
-                <canvas id="outputCanvas"></canvas>
-            </div>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            Click to Upload Image
+            <input type="file" id="fileInput" hidden accept="image/*">
         </div>
 
-        <div class="controls">
-            <div class="control-group">
-                <div class="label-row">
-                    <label>Threshold 1 (Black to Red)</label>
-                    <span id="val1">33%</span>
-                </div>
-                <input type="range" id="thresh1" min="0" max="100" value="33">
-            </div>
+        <canvas id="canvas"></canvas>
 
-            <div class="control-group">
-                <div class="label-row">
-                    <label>Threshold 2 (Red to White)</label>
-                    <span id="val2">66%</span>
-                </div>
-                <input type="range" id="thresh2" min="0" max="100" value="66">
-            </div>
+        <div class="ramp-wrapper">
+            <div class="ramp-background" id="rampBg"></div>
+            <input type="range" min="0" max="100" value="33" class="slider" id="slider1">
+            <input type="range" min="0" max="100" value="66" class="slider" id="slider2">
+        </div>
+
+        <div class="stats">
+            <span>Threshold Low: <b id="lbl1">33%</b></span>
+            <span>Threshold High: <b id="lbl2">66%</b></span>
         </div>
     </div>
 
     <script>
-        const upload = document.getElementById('upload');
-        const thresh1 = document.getElementById('thresh1');
-        const thresh2 = document.getElementById('thresh2');
-        const val1Text = document.getElementById('val1');
-        const val2Text = document.getElementById('val2');
-        
-        const inCanvas = document.getElementById('inputCanvas');
-        const outCanvas = document.getElementById('outputCanvas');
-        const inCtx = inCanvas.getContext('2d');
-        const outCtx = outCanvas.getContext('2d');
-        
-        let img = new Image();
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const slider1 = document.getElementById('slider1');
+        const slider2 = document.getElementById('slider2');
+        const rampBg = document.getElementById('rampBg');
+        const lbl1 = document.getElementById('lbl1');
+        const lbl2 = document.getElementById('lbl2');
 
-        upload.addEventListener('change', (e) => {
+        let originalImg = null;
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
             const reader = new FileReader();
             reader.onload = (event) => {
+                const img = new Image();
                 img.onload = () => {
-                    // Set canvas sizes
-                    inCanvas.width = outCanvas.width = img.width;
-                    inCanvas.height = outCanvas.height = img.height;
-                    inCtx.drawImage(img, 0, 0);
-                    applyFilter();
+                    originalImg = img;
+                    render();
                 };
                 img.src = event.target.result;
             };
             reader.readAsDataURL(e.target.files[0]);
         });
 
-        function applyFilter() {
-            if (!img.src) return;
-
-            const t1 = thresh1.value / 100 * 255;
-            const t2 = thresh2.value / 100 * 255;
-
-            val1Text.innerText = thresh1.value + "%";
-            val2Text.innerText = thresh2.value + "%";
-
-            const imageData = inCtx.getImageData(0, 0, inCanvas.width, inCanvas.height);
-            const data = imageData.data;
-
-            for (let i = 0; i < data.length; i += 4) {
-                // 1. Convert to Grayscale (Luminance)
-                const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-
-                // 2. Apply Tri-Tone Logic
-                if (avg < t1) {
-                    // Black
-                    data[i] = 0;     // R
-                    data[i + 1] = 0; // G
-                    data[i + 2] = 0; // B
-                } else if (avg < t2) {
-                    // Red
-                    data[i] = 255;   // R
-                    data[i + 1] = 0; // G
-                    data[i + 2] = 0; // B
-                } else {
-                    // White
-                    data[i] = 255;   // R
-                    data[i + 1] = 255; // G
-                    data[i + 2] = 255; // B
-                }
+        function updateRamp() {
+            // Ensure slider 1 is always lower than slider 2
+            if (parseInt(slider1.value) > parseInt(slider2.value)) {
+                let tmp = slider1.value;
+                slider1.value = slider2.value;
+                slider2.value = tmp;
             }
 
-            outCtx.putImageData(imageData, 0, 0);
+            const v1 = slider1.value;
+            const v2 = slider2.value;
+            
+            lbl1.innerText = v1 + "%";
+            lbl2.innerText = v2 + "%";
+
+            // Update background color ramp to be accurate
+            rampBg.style.background = `linear-gradient(to right, 
+                #000 0%, #000 ${v1}%, 
+                #ff0000 ${v1}%, #ff0000 ${v2}%, 
+                #fff ${v2}%, #fff 100%)`;
+            
+            render();
         }
 
-        // Listen for slider changes
-        thresh1.addEventListener('input', applyFilter);
-        thresh2.addEventListener('input', applyFilter);
+        function render() {
+            if (!originalImg) return;
+
+            // Maintain aspect ratio
+            const scale = Math.min(800 / originalImg.width, 1);
+            canvas.width = originalImg.width * scale;
+            canvas.height = originalImg.height * scale;
+            
+            ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const t1 = (slider1.value / 100) * 255;
+            const t2 = (slider2.value / 100) * 255;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.21 * data[i] + 0.72 * data[i+1] + 0.07 * data[i+2];
+                
+                if (gray < t1) {
+                    data[i] = 0; data[i+1] = 0; data[i+2] = 0;
+                } else if (gray < t2) {
+                    data[i] = 255; data[i+1] = 0; data[i+2] = 0;
+                } else {
+                    data[i] = 255; data[i+1] = 255; data[i+2] = 255;
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        slider1.oninput = updateRamp;
+        slider2.oninput = updateRamp;
     </script>
 </body>
 </html>

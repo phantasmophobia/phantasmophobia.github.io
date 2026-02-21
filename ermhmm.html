@@ -3,209 +3,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siri's Learning Lab</title>
+    <title>Generic Learning Cards</title>
+    <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --text-color: #1d1d1f;
+            --g-blue: #4285f4;
+            --g-red: #ea4335;
+            --g-yellow: #fbbc05;
+            --g-green: #34a853;
+            --gray: #5f6368;
+            --border: #dadce0;
         }
 
         body {
+            font-family: 'Product Sans', Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            height: 100vh;
+            background-color: #ffffff;
+            color: #202124;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            overflow: hidden;
         }
 
-        /* --- LIQUID GLASS THEME --- */
-        .glass-container {
-            position: relative;
-            width: 80%;
-            max-width: 600px;
-            padding: 40px;
-            border-radius: 40px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px) url(#liquid-glass);
-            -webkit-backdrop-filter: blur(20px) url(#liquid-glass);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            text-align: center;
-            z-index: 10;
+        header {
+            width: 100%;
+            padding: 12px 40px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
         }
 
-        /* Specular Highlight Rim */
-        .glass-container::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 40px;
-            border: 1.5px solid rgba(255,255,255,0.4);
-            pointer-events: none;
+        .logo { font-size: 22px; font-weight: bold; color: var(--gray); }
+        .logo span:nth-child(1) { color: var(--g-blue); }
+        .logo span:nth-child(2) { color: var(--g-red); }
+        .logo span:nth-child(3) { color: var(--g-yellow); }
+        .logo span:nth-child(4) { color: var(--g-blue); }
+        .logo span:nth-child(5) { color: var(--g-green); }
+        .logo span:nth-child(6) { color: var(--g-red); }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 40px;
         }
 
-        h1 { font-size: 2.5rem; color: #444; margin-bottom: 10px; }
-        .word-display { font-size: 5rem; font-weight: bold; color: #333; margin: 20px 0; }
-        
-        .controls { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
-        
-        button {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 20px;
-            border: none;
-            background: white;
+        /* Set Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+            text-align: center;
+            background: #f8f9fa;
         }
 
-        button:active { transform: scale(0.95); }
-        button.record { background: #ff4b2b; color: white; }
-        button.next { background: #007aff; color: white; }
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--g-blue); }
 
-        #level-select {
-            margin-bottom: 20px;
-            padding: 10px;
+        /* Practice Area */
+        .practice-view { display: none; text-align: center; }
+
+        #canvas-wrap { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .main-img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
             border-radius: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
+            background: #eee;
         }
 
-        /* Hidden Canvas for Refraction Map Generation */
-        #map-gen { display: none; }
+        .word-title {
+            font-size: 80px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .controls { display: flex; justify-content: center; gap: 30px; margin: 30px 0; }
+
+        .btn-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .btn-circle:active { transform: scale(0.9); }
+        .btn-listen { background: var(--g-blue); color: white; }
+        .btn-mic { background: var(--g-red); color: white; }
+        .btn-mic.listening { animation: pulse 1s infinite; }
+
+        .nav-btn {
+            padding: 10px 24px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: white;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn-primary { background: var(--g-blue); color: white; border: none; }
+
+        #story-display {
+            background: #f1f3f4;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 40px;
+            line-height: 1.6;
+            font-size: 20px;
+            display: none;
+        }
+
+        /* Creator View */
+        .creator-view { display: none; background: #fff; padding: 20px; border: 1px solid var(--border); border-radius: 8px; }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+        }
+
+        .hidden { display: none; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(234, 67, 53, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 67, 53, 0); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="glass-container">
-        <h1>Hello! 👋</h1>
-        <select id="level-select">
-            <option value="easy">Level 1: Animals & Things</option>
-            <option value="medium">Level 2: Actions</option>
-            <option value="stories">Level 3: Mini Stories</option>
-        </select>
+<header>
+    <div class="logo">
+        <span>G</span><span>e</span><span>n</span><span>e</span><span>r</span><span>i</span><span>c</span> Learning Cards
+    </div>
+    <div>
+        <button class="nav-btn" onclick="showView('creator')">Create Set</button>
+        <button class="nav-btn" onclick="showView('home')">Library</button>
+    </div>
+</header>
 
-        <div id="display-area">
-            <div class="word-display" id="word-target">CAT</div>
-            <p id="feedback">Press the red button and say the word!</p>
+<div class="container">
+    <div id="view-home">
+        <h2 style="margin-bottom: 24px;">Your Sets</h2>
+        <div class="grid" id="set-grid"></div>
+    </div>
+
+    <div id="view-practice" class="practice-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button class="nav-btn" onclick="showView('home')">← Back</button>
+            <div id="progress-indicator" style="font-weight: bold; color: var(--gray);">1 / 10</div>
         </div>
 
+        <div id="canvas-wrap">
+            <img id="main-display-img" class="main-img" src="" alt="Word Image">
+            <canvas id="reward-canvas"></canvas>
+        </div>
+
+        <div class="word-title" id="main-word-text">APPLE</div>
+        <p id="status-text" style="height: 20px; font-weight: bold;"></p>
+
         <div class="controls">
-            <button class="record" id="mic-btn">🎙️ Speak</button>
-            <button class="next" id="next-btn">Next Word ➡️</button>
+            <button class="btn-circle btn-listen" id="listen-trigger" title="Hear Word">🔊</button>
+            <button class="btn-circle btn-mic" id="mic-trigger" title="Speak Word">🎤</button>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button class="nav-btn" onclick="stepWord(-1)">Previous</button>
+            <button class="nav-btn btn-primary" onclick="stepWord(1)">Next Word</button>
+        </div>
+
+        <button class="nav-btn" style="margin-top: 40px;" onclick="getGeminiStory()">🤖 Generate AI Story</button>
+
+        <div id="story-display">
+            <p id="story-content"></p>
+            <button class="nav-btn btn-primary" onclick="readStory()">Read Aloud</button>
         </div>
     </div>
 
-    <svg style="display: none;">
-        <defs>
-            <filter id="liquid-glass" color-interpolation-filters="sRGB">
-                <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="2" result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-        </defs>
-    </svg>
+    <div id="view-creator" class="creator-view">
+        <h2>Create a New Set</h2>
+        <input type="text" id="set-name-input" placeholder="Set Name (e.g., My Favorite Toys)">
+        
+        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <h3>Add a Word</h3>
+            <input type="text" id="word-name-input" placeholder="Word">
+            <input type="file" id="word-file-input" accept="image/*">
+            <button class="nav-btn btn-primary" onclick="queueWord()">Add Word</button>
+        </div>
 
-    <script>
-        const API_KEY = "AIzaSyDM9CuF9Udxd81SLUzqu9ioTQQZl-sta3I";
-        const wordTarget = document.getElementById('word-target');
-        const micBtn = document.getElementById('mic-btn');
-        const feedback = document.getElementById('feedback');
-        const levelSelect = document.getElementById('level-select');
+        <div id="queue-list" style="margin: 20px 0; color: var(--gray);"></div>
 
-        const words = {
-            easy: ["DOG", "SUN", "BOOK", "RED", "FISH", "HAT"],
-            medium: ["JUMP", "RUN", "PLAY", "EAT", "SLEEP"],
-            stories: ["The cat sat.", "Big blue bus.", "I love you."]
-        };
+        <button class="nav-btn btn-primary" style="width: 100%; padding: 16px;" onclick="persistSet()">Save Set Locally</button>
+    </div>
+</div>
 
-        let currentLevel = "easy";
-        let currentIndex = 0;
+<script>
+    // --- KEYS ---
+    const API_KEYS = {
+        gemini: "AIzaSyDM9CuF9Udxd81SLUzqu9ioTQQZl-sta3I",
+        fish: "4a76eb8b45d44035ad46c2e7c376da5a",
+        fish_voice: "fcca5dc25f6842ea8c0b1e16268f9d1c"
+    };
 
-        // 1. Level Selection Logic
-        levelSelect.onchange = (e) => {
-            currentLevel = e.target.value;
-            currentIndex = 0;
-            updateWord();
-        };
-
-        function updateWord() {
-            wordTarget.innerText = words[currentLevel][currentIndex];
-            feedback.innerText = "Press the red button and say the word!";
-            feedback.style.color = "black";
+    // --- STATE ---
+    let learningSets = [
+        {
+            title: "First 10 Words",
+            words: [
+                { text: "Apple", img: "https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Ball", img: "https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Cat", img: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Dog", img: "https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Elephant", img: "https://images.pexels.com/photos/66898/elephant-cub-tsavo-kenya-66898.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Fish", img: "https://images.pexels.com/photos/128756/pexels-photo-128756.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Giraffe", img: "https://images.pexels.com/photos/802112/pexels-photo-802112.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Horse", img: "https://images.pexels.com/photos/1996333/pexels-photo-1996333.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Igloo", img: "https://images.pexels.com/photos/3843334/pexels-photo-3843334.jpeg?auto=compress&cs=tinysrgb&w=600" },
+                { text: "Jellyfish", img: "https://images.pexels.com/photos/2246417/pexels-photo-2246417.jpeg?auto=compress&cs=tinysrgb&w=600" }
+            ]
         }
+    ];
 
-        document.getElementById('next-btn').onclick = () => {
-            currentIndex = (currentIndex + 1) % words[currentLevel].length;
-            updateWord();
+    let activeSet = null;
+    let wordIdx = 0;
+    let queuedWords = [];
+
+    // --- INIT ---
+    function init() {
+        const localData = localStorage.getItem('generic_learning_data');
+        if (localData) {
+            learningSets = JSON.parse(localData);
+        }
+        renderLibrary();
+        setupCanvas();
+    }
+
+    function showView(view) {
+        document.getElementById('view-home').style.display = (view === 'home') ? 'block' : 'none';
+        document.getElementById('view-practice').style.display = (view === 'practice') ? 'block' : 'none';
+        document.getElementById('view-creator').style.display = (view === 'creator') ? 'block' : 'none';
+        if(view === 'home') renderLibrary();
+    }
+
+    function renderLibrary() {
+        const grid = document.getElementById('set-grid');
+        grid.innerHTML = '';
+        learningSets.forEach((set, i) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<h3>${set.title}</h3><p>${set.words.length} Words</p>`;
+            card.onclick = () => launchPractice(i);
+            grid.appendChild(card);
+        });
+    }
+
+    function launchPractice(idx) {
+        activeSet = learningSets[idx];
+        wordIdx = 0;
+        updateUI();
+        showView('practice');
+    }
+
+    function updateUI() {
+        const word = activeSet.words[wordIdx];
+        document.getElementById('main-display-img').src = word.img;
+        document.getElementById('main-word-text').innerText = word.text;
+        document.getElementById('progress-indicator').innerText = `${wordIdx + 1} / ${activeSet.words.length}`;
+        document.getElementById('status-text').innerText = '';
+        document.getElementById('story-display').style.display = 'none';
+    }
+
+    function stepWord(dir) {
+        const next = wordIdx + dir;
+        if (next >= 0 && next < activeSet.words.length) {
+            wordIdx = next;
+            updateUI();
+        }
+    }
+
+    // --- FISH AUDIO TTS ---
+    async function playTTS(text) {
+        const btn = document.getElementById('listen-trigger');
+        btn.innerText = "⏳";
+        try {
+            const response = await fetch("https://api.fish.audio/v1/tts", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_KEYS.fish}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text: text,
+                    reference_id: API_KEYS.fish_voice,
+                    format: "mp3",
+                    normalize: true
+                })
+            });
+            const blob = await response.blob();
+            const audio = new Audio(URL.createObjectURL(blob));
+            audio.play();
+        } catch (e) {
+            console.error("TTS Failed", e);
+            const fallback = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(fallback);
+        } finally {
+            btn.innerText = "🔊";
+        }
+    }
+
+    document.getElementById('listen-trigger').onclick = () => playTTS(activeSet.words[wordIdx].text);
+
+    // --- SPEECH RECOGNITION ---
+    function startListening() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return alert("Microphone not supported in this browser.");
+
+        const recognition = new SpeechRecognition();
+        const btn = document.getElementById('mic-trigger');
+        const status = document.getElementById('status-text');
+
+        recognition.onstart = () => {
+            btn.classList.add('listening');
+            status.innerText = "Listening...";
         };
 
-        // 2. AI Voice Recognition (Simulated via Web Speech for speed, Gemini for Analysis)
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
+        recognition.onresult = (e) => {
+            const heard = e.results[0][0].transcript.toLowerCase();
+            const target = activeSet.words[wordIdx].text.toLowerCase();
 
-        micBtn.onclick = () => {
-            recognition.start();
-            feedback.innerText = "Listening...";
-            micBtn.style.boxShadow = "0 0 20px red";
-        };
-
-        recognition.onresult = async (event) => {
-            const transcript = event.results[0][0].transcript.toUpperCase();
-            const target = wordTarget.innerText.toUpperCase();
-            micBtn.style.boxShadow = "none";
-
-            feedback.innerText = `You said: ${transcript}... checking with AI!`;
-            
-            // 3. Ask Gemini if the pronunciation was close enough for a 4-year-old
-            checkWithGemini(transcript, target);
-        };
-
-        async function checkWithGemini(said, target) {
-            const prompt = `A 4-year-old trying to learn English said "${said}". The word was "${target}". 
-                           Is this close enough? Answer in 1 word: YES or NO.`;
-
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
-
-                const data = await response.json();
-                const result = data.candidates[0].content.parts[0].text.trim().toUpperCase();
-
-                if (result.includes("YES")) {
-                    feedback.innerText = "🌟 GREAT JOB! 🌟";
-                    feedback.style.color = "green";
-                    speakText("Great job! You are so smart.");
-                } else {
-                    feedback.innerText = "So close! Try one more time.";
-                    feedback.style.color = "#d9534f";
-                }
-            } catch (error) {
-                console.error("AI Error:", error);
-                // Fallback if API fails
-                if (said.includes(target)) {
-                    feedback.innerText = "Good job!";
-                    speakText("Good job!");
-                }
+            if (heard.includes(target)) {
+                status.innerText = "🌟 Great Job!";
+                status.style.color = "var(--g-green)";
+                triggerConfetti();
+            } else {
+                status.innerText = `Heard: "${heard}". Try again!`;
+                status.style.color = "var(--g-red)";
             }
-        }
+        };
 
-        function speakText(msg) {
-            const speech = new SpeechSynthesisUtterance(msg);
-            window.speechSynthesis.speak(speech);
-        }
+        recognition.onend = () => btn.classList.remove('listening');
+        recognition.start();
+    }
 
-        // Initialize first word
-        updateWord();
-    </script>
+    document.getElementById('mic-trigger').onclick = startListening;
+
+    // --- GEMINI AI STORY ---
+    async function getGeminiStory() {
+        const word = activeSet.words[wordIdx].text;
+        const display = document.getElementById('story-display');
+        const content = document.getElementById('story-content');
+        
+        display.style.display = 'block';
+        content.innerText = "Creating a story for you...";
+
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEYS.gemini}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Write a 2-sentence story for a 4-year-old child using the word '${word}'. Use very simple words.` }] }]
+                })
+            });
+            const data = await res.json();
+            const text = data.candidates[0].content.parts[0].text;
+            content.innerText = text;
+        } catch (e) {
+            content.innerText = "The story machine is tired. Try again later!";
+        }
+    }
+
+    function readStory() {
+        playTTS(document.getElementById('story-content').innerText);
+    }
+
+    // --- CREATOR LOGIC ---
+    function queueWord() {
+        const word = document.getElementById('word-name-input').value;
+        const file = document.getElementById('word-file-input').files[0];
+        if(!word || !file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            queuedWords.push({ text: word, img: e.target.result });
+            document.getElementById('queue-list').innerText = `Words added: ${queuedWords.length}`;
+            document.getElementById('word-name-input').value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function persistSet() {
+        const title = document.getElementById('set-name-input').value || "New Set";
+        if (queuedWords.length === 0) return alert("Add some words first!");
+
+        learningSets.push({ title: title, words: queuedWords });
+        localStorage.setItem('generic_learning_data', JSON.stringify(learningSets));
+        queuedWords = [];
+        showView('home');
+    }
+
+    // --- CANVAS REWARDS ---
+    let ctx, canvas, particles = [];
+    function setupCanvas() {
+        canvas = document.getElementById('reward-canvas');
+        ctx = canvas.getContext('2d');
+        canvas.width = 600;
+        canvas.height = 400;
+    }
+
+    function triggerConfetti() {
+        particles = Array.from({length: 40}, () => ({
+            x: 300, y: 200,
+            vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15,
+            c: `hsl(${Math.random()*360}, 70%, 50%)`, s: Math.random()*10+5
+        }));
+        requestAnimationFrame(drawParticles);
+    }
+
+    function drawParticles() {
+        ctx.clearRect(0,0,600,400);
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.4;
+            ctx.fillStyle = p.c;
+            ctx.fillRect(p.x, p.y, p.s, p.s);
+        });
+        particles = particles.filter(p => p.y < 400);
+        if(particles.length > 0) requestAnimationFrame(drawParticles);
+    }
+
+    init();
+</script>
 </body>
 </html>
